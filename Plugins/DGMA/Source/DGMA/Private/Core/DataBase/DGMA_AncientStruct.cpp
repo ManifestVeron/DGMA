@@ -7,7 +7,8 @@ FDGMA_AncientStruct& FDGMA_AncientStruct::operator=(const FDGMA_AncientStruct& t
 {
 	Team = turret_pack.Team;
 	Health = turret_pack.Health;
-	MaterialInstance = turret_pack.MaterialInstance;
+	MI_Main = turret_pack.MI_Main;
+	MI_HalfHP = turret_pack.MI_HalfHP;
 
 	return *this;
 }

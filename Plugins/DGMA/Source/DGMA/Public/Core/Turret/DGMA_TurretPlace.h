@@ -18,6 +18,7 @@ class DGMA_API ADGMA_TurretPlace : public ADGMA_BaseEnemy, public ITransferMeta
 
 protected:
 
+	UPROPERTY()
 	int32 Price = 0;
 
 	UPROPERTY()
@@ -27,10 +28,12 @@ protected:
 	float Damage;
 	
 public:
+
+	virtual void BeginPlay() override;
 	
+	// Interface
 	virtual void TransferMetaAncient(FDGMA_AncientStruct AncientPack) override;
 	virtual void TransferMetaTurret(FDGMA_TurretStruct TurretPack) override;
-	virtual void BeginPlay() override;
 
 protected:
 	
@@ -41,5 +44,9 @@ protected:
 	void MULTICAST_SetMaterial(UMaterialInstance* MaterialInstance);
 
 	UFUNCTION()
-	void AddMoneyBeforeDestroy(AActor* DestroyActor);
+	void AddMoneyBeforeDead();
+
+private:
+	
+	FScriptDelegate DelegateForBeforeDestroy;
 };

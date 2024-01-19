@@ -22,7 +22,7 @@
 #include "Kismet/KismetTextLibrary.h"
 #include "Net/UnrealNetwork.h"
 
-DEFINE_LOG_CATEGORY(LogTemplateCharacter);
+DEFINE_LOG_CATEGORY(LogDGMA_Char);
 
 
 // Sets default values
@@ -85,57 +85,6 @@ void ADGMA_Char::BeginPlay()
 	}
 }
 
-// Called every frame
-void ADGMA_Char::Tick(float DeltaTime)
-{
-	Super::Tick(DeltaTime);
-	
-	if (bIsBuilding)
-	{
-		if(bIsSpawnedGhost)
-		{
-			SERVER_BuildGhost();
-			bIsSpawnedGhost = false;
-		}
-		SERVER_MovingGhost();
-	}
-	else if(!bIsBuilding && !bIsSpawnedGhost)
-	{
-		if(IsValid(TurretGhost)) TurretGhost->Destroy();
-		bIsSpawnedGhost = true;
-	}
-}
-
-void ADGMA_Char::SERVER_BuildGhost_Implementation()
-{
-	TurretGhost = GetWorld()->SpawnActor<ADGMA_TurretGhost>
-	(
-		DGMA_TurretGhost,
-		GetActorLocation(),
-		GetActorRotation()-FRotator(0.0f,90.0f,0.0f)
-	);
-}
-
-void ADGMA_Char::SERVER_MovingGhost_Implementation()
-{
-	TArray<AActor*> ActorsToIgnor;
-	ActorsToIgnor.Add(TurretGhost);
-	FHitResult HitResult;
-	const FCollisionQueryParams Params;
-	FVector StartTrace = FollowCamera->GetComponentLocation();
-	FVector EndTrace = FollowCamera->GetForwardVector()*1000.0f + StartTrace;
-	if(UKismetSystemLibrary::LineTraceSingle(GetWorld(),StartTrace,EndTrace,ETraceTypeQuery::TraceTypeQuery1,false,ActorsToIgnor,EDrawDebugTrace::None,HitResult,true))
-	{
-		UKismetSystemLibrary::LineTraceSingle(GetWorld(),HitResult.Location + FVector(0.0f,0.0f,500.0f),HitResult.Location - FVector(0.0f,0.0f,50.0f),ETraceTypeQuery::TraceTypeQuery1,false,ActorsToIgnor,EDrawDebugTrace::None,HitResult,true);
-		TurretGhost->SetActorLocation(HitResult.Location);
-	}
-	else
-	{
-		UKismetSystemLibrary::LineTraceSingle(GetWorld(),HitResult.TraceEnd,HitResult.TraceEnd - FVector(0.0f,0.0f,500.0f),ETraceTypeQuery::TraceTypeQuery1,false,ActorsToIgnor,EDrawDebugTrace::None,HitResult,true);
-		TurretGhost->SetActorLocation(HitResult.Location);
-	}
-}
-
 // Called to bind functionality to input
 void ADGMA_Char::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 {
@@ -158,55 +107,8 @@ void ADGMA_Char::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent
 	}
 	else
 	{
-		UE_LOG(LogTemplateCharacter, Error, TEXT("'%s' Failed to find an Enhanced Input component! This template is built to use the Enhanced Input system. If you intend to use the legacy system, then you will need to update this C++ file."), *GetNameSafe(this));
+		UE_LOG(LogDGMA_Char, Error, TEXT("'%s' Failed to find an Enhanced Input component! This template is built to use the Enhanced Input system. If you intend to use the legacy system, then you will need to update this C++ file."), *GetNameSafe(this));
 	}
-}
-
-void ADGMA_Char::SERVER_SpawnSelectedTurret_Implementation()
-{
-	if(IsValid(TurretGhost))
-	{
-		if(bIsBuilding && TurretGhost->bIsSpawn && bIsNoCooldown && DGMA_PlayerState->Money >= SelectedTurret.Price)
-		{
-			bIsBuilding = false;
-			FActorSpawnParameters SpawnParameter;
-			SpawnParameter.Owner = this;
-			SpawnParameter.Instigator = this;
-			TurretPlace = GetWorld()->SpawnActor<ADGMA_TurretPlace>(DGMA_TurretPlace,TurretGhost->GetTransform(),SpawnParameter);
-			SelectedTurret.Team = Team;
-			TurretPlace->TransferMetaTurret(SelectedTurret);
-			TurretGhost->Destroy();
-			GetWorldTimerManager().SetTimer(TimerHandle,this,&ADGMA_Char::CooldownStart,1.0f,true);
-			bIsSpawnedGhost = true;
-		}
-	}
-}
-
-void ADGMA_Char::CooldownStart()
-{
-	SERVER_Cooldown();
-}
-
-void ADGMA_Char::SERVER_Cooldown_Implementation()
-{
-	if(Cooldown > 0)
-	{
-		bIsNoCooldown = false;
-		--Cooldown;
-		OnRep_SetCooldown();
-	}
-	else
-	{
-		GetWorldTimerManager().ClearTimer(TimerHandle);
-		bIsNoCooldown = true;
-		Cooldown = 5;
-		OnRep_SetCooldown();
-	}
-}
-
-void ADGMA_Char::OnRep_SetCooldown()
-{
-	TextRenderComponent->SetText(UKismetTextLibrary::Conv_IntToText(Cooldown));
 }
 
 void ADGMA_Char::Move(const FInputActionValue& Value)
@@ -245,13 +147,122 @@ void ADGMA_Char::Look(const FInputActionValue& Value)
 	}
 }
 
+// Called every frame
+void ADGMA_Char::Tick(float DeltaTime)
+{
+	Super::Tick(DeltaTime);
+	
+	if (bIsBuilding)
+	{
+		if(bIsSpawnedGhost)
+		{
+			SERVER_SpawnGhost();
+			bIsSpawnedGhost = false;
+		}
+		SERVER_MovingGhost();
+	}
+	else if(!bIsBuilding && !bIsSpawnedGhost)
+	{
+		if(IsValid(TurretGhost)) TurretGhost->Destroy();
+		bIsSpawnedGhost = true;
+	}
+}
+
+void ADGMA_Char::SERVER_SpawnGhost_Implementation()
+{
+	TurretGhost = GetWorld()->SpawnActor<ADGMA_TurretGhost>
+	(
+		DGMA_TurretGhost,
+		GetActorLocation(),
+		GetActorRotation()-FRotator(0.0f,90.0f,0.0f)
+	);
+}
+
+void ADGMA_Char::SERVER_MovingGhost_Implementation()
+{
+	TArray<AActor*> ActorsToIgnor;
+	ActorsToIgnor.Add(TurretGhost);
+	FHitResult HitResult;
+	const FCollisionQueryParams Params;
+	FVector StartTrace = FollowCamera->GetComponentLocation();
+	FVector EndTrace = FollowCamera->GetForwardVector()*1000.0f + StartTrace;
+	
+	if(UKismetSystemLibrary::LineTraceSingle(GetWorld(),StartTrace,EndTrace,ETraceTypeQuery::TraceTypeQuery1,false,ActorsToIgnor,EDrawDebugTrace::None,HitResult,true))
+	{
+		UKismetSystemLibrary::LineTraceSingle(GetWorld(),HitResult.Location + FVector(0.0f,0.0f,500.0f),HitResult.Location - FVector(0.0f,0.0f,50.0f),ETraceTypeQuery::TraceTypeQuery1,false,ActorsToIgnor,EDrawDebugTrace::None,HitResult,true);
+		TurretGhost->SetActorLocation(HitResult.Location);
+	}
+	else
+	{
+		UKismetSystemLibrary::LineTraceSingle(GetWorld(),HitResult.TraceEnd,HitResult.TraceEnd - FVector(0.0f,0.0f,500.0f),ETraceTypeQuery::TraceTypeQuery1,false,ActorsToIgnor,EDrawDebugTrace::None,HitResult,true);
+		TurretGhost->SetActorLocation(HitResult.Location);
+	}
+}
+
+void ADGMA_Char::SERVER_SpawnSelectedTurret_Implementation()
+{
+	if(IsValid(TurretGhost))
+	{
+		if(bIsBuilding && TurretGhost->bIsSpawn && bIsNoCooldown && DGMA_PlayerState->Money >= SelectedTurret.Price)
+		{
+			DGMA_PlayerState->Money -= SelectedTurret.Price;
+			
+			bIsBuilding = false;
+			
+			FActorSpawnParameters SpawnParameter;
+			SpawnParameter.Owner = DGMA_PlayerState;
+			SpawnParameter.Instigator = this;
+			
+			TurretPlace = GetWorld()->SpawnActor<ADGMA_TurretPlace>(DGMA_TurretPlace,TurretGhost->GetTransform(),SpawnParameter);
+			
+			SelectedTurret.Team = Team;
+			
+			TurretPlace->TransferMetaTurret(SelectedTurret);
+			
+			TurretGhost->Destroy();
+			
+			GetWorldTimerManager().SetTimer(TimerHandleForCooldown,this,&ADGMA_Char::CooldownStart,1.0f,true);
+			
+			bIsSpawnedGhost = true;
+		}
+	}
+}
+
+void ADGMA_Char::CooldownStart()
+{
+	SERVER_Cooldown();
+}
+
+void ADGMA_Char::SERVER_Cooldown_Implementation()
+{
+	if(Cooldown > 0)
+	{
+		bIsNoCooldown = false;
+		--Cooldown;
+		OnRep_SetCooldown();
+	}
+	else
+	{
+		GetWorldTimerManager().ClearTimer(TimerHandleForCooldown);
+		bIsNoCooldown = true;
+		Cooldown = 5;
+		OnRep_SetCooldown();
+	}
+}
+
+void ADGMA_Char::OnRep_SetCooldown() const
+{
+	TextRenderComponent->SetText(UKismetTextLibrary::Conv_IntToText(Cooldown));
+}
+
 void ADGMA_Char::PossessedBy(AController* NewController)
 {
 	Super::PossessedBy(NewController);
 
-	DGMA_LocalPlayerController = Cast<ADGMA_PlayerController>(NewController);
-	Team = DGMA_LocalPlayerController->Team;
-	DGMA_PlayerState = Cast<ADGMA_PlayerState>(DGMA_LocalPlayerController->PlayerState);
+	DGMA_PlayerController = Cast<ADGMA_PlayerController>(NewController);
+	DGMA_PlayerState = Cast<ADGMA_PlayerState>(NewController->PlayerState);
+	
+	Team = DGMA_PlayerController->Team;
 	
 	FActorSpawnParameters SpawnParameters;
 	SpawnParameters.Owner = this;
@@ -265,13 +276,11 @@ void ADGMA_Char::PossessedBy(AController* NewController)
 		SpawnParameters
 	);
 	
-	//TArray<FName> RowNames = DataBaseAncient->GetRowNames();
-	//auto temp = DataBaseAncient->FindRow<FDGMA_AncientStruct>("Ancient_One", "FAILED");
 	if(SpawnedAncient && DGMA_DataAssetsAncient)
 	{
 		SpawnedAncient->TransferMetaAncient(DGMA_DataAssetsAncient->AssetItems[Team - 1]);
 	}
-	else UE_LOG(LogTemplateCharacter,Error,TEXT("Check DGMA_DataAssetsAncient and DGMA_Ancient in Character "));
+	else UE_LOG(LogDGMA_Char,Error,TEXT("Check DGMA_DataAssetsAncient and DGMA_Ancient in Character "));
 }
 
 void ADGMA_Char::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const

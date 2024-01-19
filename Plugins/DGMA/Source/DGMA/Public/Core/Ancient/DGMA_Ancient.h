@@ -11,6 +11,7 @@
 /**
  * 
  */
+
 UCLASS()
 class DGMA_API ADGMA_Ancient : public ADGMA_BaseEnemy, public ITransferMeta
 {
@@ -21,34 +22,34 @@ protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Replicated)
 	UStaticMeshComponent* Mesh;
 
+private:
+	
 	FDGMA_AncientStruct AncientStruct;
-
+	
 public:
 
 	// Interface
 	virtual void TransferMetaAncient(FDGMA_AncientStruct AncientPack) override;
 	virtual void TransferMetaTurret(FDGMA_TurretStruct TurretPack) override;
 	
-protected:
+private:
 
 	ADGMA_Ancient();
-	
 
 	// Pawn Overriding
 	virtual void Tick(float DeltaSeconds) override;
 	virtual void BeginPlay() override;
 
-private:
-
+	void Regeneration();
+	
 	UFUNCTION(Server,Reliable)
 	void SERVER_Regeneration();
 
 	UFUNCTION(NetMulticast,Reliable)
 	void MULTICAST_Regeneration();
-	
-	void Regeneration();
-	
+
 	UFUNCTION(NetMulticast,Reliable)
 	void SetMeta(FDGMA_AncientStruct AncientPack);
-	
+
+	FTimerHandle TimerHandle;
 };

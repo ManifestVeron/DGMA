@@ -21,16 +21,20 @@ struct FDGMA_AncientStruct
 	float Health;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	UMaterialInstance* MaterialInstance;
+	UMaterialInstance* MI_Main;
 
-	FDGMA_AncientStruct():Team(0),Health(100.0f),MaterialInstance(nullptr)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	UMaterialInstance* MI_HalfHP;
+
+	FDGMA_AncientStruct():Team(0),Health(100.0f),MI_Main(nullptr),MI_HalfHP(nullptr)
 	{}
 
 	FDGMA_AncientStruct(const FDGMA_AncientStruct& turret_pack)
 	{
 		Team = turret_pack.Team;
 		Health = turret_pack.Health;
-		MaterialInstance = turret_pack.MaterialInstance;
+		MI_Main = turret_pack.MI_Main;
+		MI_HalfHP = turret_pack.MI_HalfHP;
 	}
 
 	FDGMA_AncientStruct& operator= (const FDGMA_AncientStruct& torpedo_packet);

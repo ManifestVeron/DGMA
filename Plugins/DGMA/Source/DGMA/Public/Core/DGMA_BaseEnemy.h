@@ -11,7 +11,7 @@ class DGMA_API ADGMA_BaseEnemy : public AActor
 {
 	GENERATED_BODY()
 	
-public:	
+protected:	
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	USceneComponent* Root;
@@ -35,7 +35,8 @@ protected:
 	
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
-
+	FInstigatedAnyDamageSignature Damage;
+	
 	virtual float TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser) override;
 
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;

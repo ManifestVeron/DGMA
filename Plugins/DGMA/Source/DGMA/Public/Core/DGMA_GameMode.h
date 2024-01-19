@@ -21,6 +21,7 @@ public:
 
 	void SpawnPlayer(FName TagPlayerController, ADGMA_PlayerController* PlayerController, TSubclassOf<ADGMA_Char> Char) const;
 
+	// Interface
 	UFUNCTION(BlueprintCallable)
 	virtual void TransferMetaAncient(FDGMA_AncientStruct AncientPack) override;
 	virtual void TransferMetaTurret(FDGMA_TurretStruct TurretPack) override;

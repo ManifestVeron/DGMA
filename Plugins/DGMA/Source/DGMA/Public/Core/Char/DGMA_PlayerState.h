@@ -16,6 +16,7 @@ class DGMA_API ADGMA_PlayerState : public APlayerState
 
 public:
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Replicated)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Replicated, Category = "DGMA_PlayerState")
 	int32 Money;
+	
 };

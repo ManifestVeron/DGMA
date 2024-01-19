@@ -8,20 +8,21 @@
 #include "Logging/LogMacros.h"
 #include "DGMA_Char.generated.h"
 
-class ADGMA_TurretPlace;
-class ADGMA_TurretGhost;
-class UDGMADataAsset;
-class ITransferMeta;
-class ADGMA_Ancient;
 class ADGMA_PlayerState;
 class ADGMA_PlayerController;
+class ADGMA_TurretPlace;
+class ADGMA_TurretGhost;
+class ADGMA_Ancient;
+class UDGMADataAsset;
+class ITransferMeta;
+
 class USpringArmComponent;
 class UCameraComponent;
 class UInputMappingContext;
 class UInputAction;
 struct FInputActionValue;
 
-DECLARE_LOG_CATEGORY_EXTERN(LogTemplateCharacter, Log, All);
+DECLARE_LOG_CATEGORY_EXTERN(LogDGMA_Char, Log, All);
 
 UCLASS(config=Game)
 class ADGMA_Char : public ACharacter
@@ -76,19 +77,21 @@ protected:
 
 	UPROPERTY(EditAnywhere,BlueprintReadWrite, Category = "DGMA_Char")
 	UDGMADataAsset* DGMA_DataAssetsAncient;
-
-	UPROPERTY()
-	ADGMA_PlayerController* DGMA_LocalPlayerController;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	
+	UPROPERTY(BlueprintReadWrite, Category = "DGMA_Char")
 	bool bIsBuilding = false;
 
-	UPROPERTY(EditAnywhere,BlueprintReadWrite)
+	UPROPERTY(BlueprintReadWrite, Category = "DGMA_Char")
 	FDGMA_TurretStruct SelectedTurret;
 
+	UPROPERTY()
+	ADGMA_PlayerController* DGMA_PlayerController;
 
 private:
 
+	UPROPERTY(ReplicatedUsing = OnRep_SetCooldown)
+	int32 Cooldown = 5;
+	
 	UPROPERTY()
 	ADGMA_TurretGhost* TurretGhost;
 
@@ -97,11 +100,8 @@ private:
 	
 	bool bIsSpawnedGhost = true;
 	bool bIsNoCooldown = true;
-
-	UPROPERTY(ReplicatedUsing = OnRep_SetCooldown)
-	int32 Cooldown = 5;
 	
-	FTimerHandle TimerHandle;
+	FTimerHandle TimerHandleForCooldown;
 
 public:
 	
@@ -132,7 +132,7 @@ private:
 
 	
 	UFUNCTION(Server,Reliable)
-	void SERVER_BuildGhost();
+	void SERVER_SpawnGhost();
 
 	UFUNCTION(Server,Reliable)
 	void SERVER_MovingGhost();
@@ -142,10 +142,9 @@ private:
 
 	UFUNCTION(Server,Reliable)
 	void SERVER_Cooldown();
-
+	
 	void CooldownStart();
 
 	UFUNCTION()
-	void OnRep_SetCooldown();
+	void OnRep_SetCooldown() const;
 };
-

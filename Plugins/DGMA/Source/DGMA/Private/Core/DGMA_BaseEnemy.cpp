@@ -18,7 +18,7 @@ ADGMA_BaseEnemy::ADGMA_BaseEnemy()
 	BoxCollision = CreateDefaultSubobject<UBoxComponent>("Box Collision");
 	BoxCollision->SetupAttachment(GetRootComponent());
 	
-	Health = 100.0f;// подсасывать из структуры
+	Health = 100.0f;
 
 	bReplicates = true;
 }
@@ -39,12 +39,12 @@ void ADGMA_BaseEnemy::Tick(float DeltaTime)
 float ADGMA_BaseEnemy::TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent, AController* EventInstigator,
 	AActor* DamageCauser)
 {
-	Health = Health - DamageAmount;
+	Health -= DamageAmount;
 	if (Health <= 0.0f)
 	{
 		Destroy();
 	}
-	return Super::TakeDamage(DamageAmount, DamageEvent, EventInstigator, DamageCauser);
+	return DamageAmount;
 }
 
 void ADGMA_BaseEnemy::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
